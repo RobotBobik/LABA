@@ -34,7 +34,7 @@ services:
     command: >
       bash -c "
       apt-get update && apt-get install -y cron &&
-      (crontab -l 2>/dev/null; echo '*/1 * * * * sleep $(($RANDOM % 5)); mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql') | crontab - &&
+      (crontab -l 2>/dev/null; echo "*/1 * * * * sh -c 'sleep \$((RANDOM \% 5)); mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql'") | crontab - &&
       crond -f -l 8"
     depends_on:
       - mydb
