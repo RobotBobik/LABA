@@ -1,1 +1,47 @@
-gamno
+version: "3.8"
+
+services:
+  mydb:
+    image: mysql:5.7
+    container_name: mydb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 15s
+      retries: 5
+    volumes:
+      - mydb-data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    depends_on:
+      mydb:
+        condition: service_healthy
+    environment:
+      PMA_HOST: mydb
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    ports:
+      - "8080:80"
+
+  mysql-dump:
+    image: mysql:5.7
+    container_name: mysql-dump
+    command: >
+      bash -c "
+      sleep 10 &&
+      mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql"
+    depends_on:
+      mydb:
+        condition: service_healthy
+    volumes:
+      - ./task-13:/backup
+
+volumes:
+  mydb-data:
