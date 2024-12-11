@@ -2,52 +2,38 @@ version: "3.3"
 
 services:
   mydb:
-    image: mysql:5.7
-    container_name: mydb
-    restart: always
+    build:
+      context: ./mydb
+    image: mydb:latest
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydb
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    networks:
+      - frontend
+    volumes:
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 15s
       retries: 5
-    volumes:
-      - mydb-data:/var/lib/mysql
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: always
-    depends_on:
-      mydb:
-        condition: service_healthy
+    build:
+      context: ./phpmyadmin
+    image: phpmyadmin:latest
     environment:
-      PMA_HOST: mydb
-      PMA_USER: root
-      PMA_PASSWORD: rootpassword
+      - PMA_HOST=mydb
+      - PMA_PORT=3306
     ports:
       - "8080:80"
-    command: >
-      sh -c "while ! mysqladmin ping -h mydb --silent; do sleep 1; done &&
-      phpmyadmin-entrypoint"
-
-  mysql-dump:
-    image: mysql:5.7
-    container_name: mysql-dump
-    command: >
-      bash -c "
-      while ! mysqladmin ping -h mydb --silent; do sleep 1; done &&
-      while true; do
-        mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql;
-        sleep 60;
-      done"
     depends_on:
-      mydb:
-        condition: service_healthy
-    volumes:
-      - ./task-13:/backup
+      - mydb
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    name: dockercompose-frontend
 
 volumes:
-  mydb-data:
+  mysql_data:
