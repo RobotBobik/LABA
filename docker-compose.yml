@@ -1,4 +1,5 @@
 version: "3.3"
+
 services:
   mydb:
     image: mysql:5.7
@@ -14,6 +15,7 @@ services:
       retries: 5
     volumes:
       - mydb-data:/var/lib/mysql
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
@@ -27,20 +29,25 @@ services:
       PMA_PASSWORD: rootpassword
     ports:
       - "8080:80"
+    command: >
+      sh -c "while ! mysqladmin ping -h mydb --silent; do sleep 1; done &&
+      phpmyadmin-entrypoint"
+
   mysql-dump:
     image: mysql:5.7
     container_name: mysql-dump
-    # Вариант 1:  Запускаем дамп периодически с помощью cron
     command: >
       bash -c "
-      apt-get update && apt-get install -y cron &&
-      (crontab -l 2>/dev/null; echo "*/1 * * * * sh -c 'sleep \$((RANDOM \% 5)); mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql'") | crontab - &&
-      crond -f -l 8"
+      while ! mysqladmin ping -h mydb --silent; do sleep 1; done &&
+      while true; do
+        mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql;
+        sleep 60;
+      done"
     depends_on:
-      - mydb
+      mydb:
+        condition: service_healthy
     volumes:
       - ./task-13:/backup
-
 
 volumes:
   mydb-data:
