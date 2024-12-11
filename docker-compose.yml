@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3" # Changed to 3.3
 
 services:
   mydb:
@@ -21,8 +21,7 @@ services:
     container_name: phpmyadmin
     restart: always
     depends_on:
-      mydb:
-        condition: service_healthy
+      - mydb
     environment:
       PMA_HOST: mydb
       PMA_USER: root
@@ -38,8 +37,7 @@ services:
       sleep 10 &&
       mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql"
     depends_on:
-      mydb:
-        condition: service_healthy
+      - mydb
     volumes:
       - ./task-13:/backup
 
