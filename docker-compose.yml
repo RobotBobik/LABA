@@ -30,13 +30,17 @@ services:
   mysql-dump:
     image: mysql:5.7
     container_name: mysql-dump
+    # Вариант 1:  Запускаем дамп периодически с помощью cron
     command: >
       bash -c "
-      sleep 10 &&
-      mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql"
+      apt-get update && apt-get install -y cron &&
+      (crontab -l 2>/dev/null; echo '*/1 * * * * sleep $(($RANDOM % 5)); mysqldump -h mydb -u root -prootpassword mydb > /backup/mydb.sql') | crontab - &&
+      crond -f -l 8"
     depends_on:
       - mydb
     volumes:
       - ./task-13:/backup
+
+
 volumes:
   mydb-data:
