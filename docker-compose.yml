@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   frontend:
     build: ./frontend
@@ -6,30 +7,7 @@ services:
       - "8080:80"
     networks:
       - dockercompose-frontend
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-
-  db:
-    build: ./db
-    environment:
-      MYSQL_ROOT_PASSWORD: example
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - dockercompose-frontend
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p example || exit 1"]
-      interval: 10s
-      timeout: 15s
-      retries: 5
 
 networks:
   dockercompose-frontend:
     driver: bridge
-
-volumes:
-  mysql_data:
