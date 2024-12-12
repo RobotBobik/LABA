@@ -23,7 +23,7 @@ services:
     networks:
       - dockercompose-frontend
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost || exit 1"]
       interval: 10s
       timeout: 15s
       retries: 5
